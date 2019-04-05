@@ -1,14 +1,19 @@
-//-----------------API REST---------------------------
+//-----------API REST--------------------
 
 const express = require('express');
-const server = express();
-const data = require('./data.json')
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const port = process.env.PORT || 5678;
+const mongoose = require('mongoose'); // se necesita conectar a la base de datos para interactuar con ella 
 const fs = require('fs');
-const { promisify } = require('util');
 const path = require('path');
+const { promisify } = require('util');
+const Product = require('./models/products');
+const data = require('./data.json');
+const server = express();
+
+const port = process.env.PORT || 5688;
+mongoose.connect('mongodb://localhost:27017/handCrshop', {useNewUrlParser: true}); //cadena de conexión, credenciales y como acceder
+
 
 //GET - solicitar: /products (en plural)/ products/:id (1 producto)
 //POST - ingresar datos:  /products
@@ -17,7 +22,7 @@ const path = require('path');
 //PATCH - actualiza solo 1 recurso
 //Recurso: lo que se está solicitando (products)
 
-const filePath = path.resolve(__dirname, 'data.json');
+const filePath = path.resolve(__dirname, 'datas.json');
 const writeFile = promisify(fs.writeFile);
 
 const save = content => writeFile(filePath, JSON.stringify(content));
@@ -29,13 +34,17 @@ server.use(bodyParser.urlencoded({ extended : false }));
 
 // parse application/json - body-parser - mimetype
 server.use(bodyParser.json());
-server.use(cors());
 
+//Enable cors()
+server.use(cors());
 
 //Get solicitar datos
 server.get('/products/', (req, res) =>{
-    res.json(data);
-})
+  Product.find()
+  .then((products) => {
+    res.json(products);
+  }); 
+});
 
 
 //Get /products/:id
@@ -55,7 +64,14 @@ server.get('/products/:id', (req, res) =>{
 
 //Post
 server.post('/products', (req, res) =>{
-    //Se utiliza postman para agregar producto
+    const product = new Product(req.body);
+    console.log("PRODUCTO >>>" + product);
+    product.save()
+    .then((product) => {
+        res.json(products);
+    });
+ 
+     /* //Se utiliza postman para agregar producto
   console.log(req.body); // manda todos los datos
   // console.log(Object.keys(req));
    const product = {
@@ -64,7 +80,7 @@ server.post('/products', (req, res) =>{
     }
     data.push(product);
     save(data);
-    res.json('data')
+    res.json('data')*/
 });
 
 
@@ -83,7 +99,6 @@ server.put('/products/:id', (req, res)=> {
     data[productIndex] = newProduct;
     save(data);
     res.json(newProduct);
-    //Min 1:10 del video 5
 });
 
 

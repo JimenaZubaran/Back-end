@@ -24,7 +24,8 @@ const HANDCRAFT_SECTION_SELECTOR = 'div.s-result-item';
                 title: section.querySelector('h5 > a > span').innerText,
                 image: section.querySelector('img').src,
                // price: section.querySelector('.a-price-whole').innerText,
-                price: section.querySelector('.a-offscreen').innerText,
+                price: (section.querySelector('.a-offscreen') || {}).innerText || "$0.99",
+                stock : Math.floor(Math.random()*100),
             })
         ),
     );
